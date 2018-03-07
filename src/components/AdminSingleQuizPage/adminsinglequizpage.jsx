@@ -77,6 +77,10 @@ class AdminSingleQuizPage extends Component {
         userid: user.id,
       }, this.axiosConfig);
     });
+
+    this.setState({
+      users: [...users.data],
+    });
   }
 
   componentDidMount() {

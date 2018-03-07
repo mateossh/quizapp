@@ -86,7 +86,6 @@ class AdminAddQuizPage extends Component {
           <Input type="number" placeholder="Ilość losowanych pytań" onChange={this.handleSize} border="true" min="1" />
           {/* <Input type="file" id="file" onChange={this.handleQuestionFile} border="true" /> */}
           <Dropzone
-            accept="text/csv"
             className={styles.dropzone}
             onDrop={this.handleQuestionFile}
           >

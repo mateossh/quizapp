@@ -133,7 +133,8 @@ routes.delete('/', auth.passport.authenticate('jwt', { session: false }), isAdmi
  * @method
  * @param {uuid} id - Question ID.
  */
-routes.post('/upload', auth.passport.authenticate('jwt', { session: false }), upload.single('file'), isAdmin, function (req, res, next) {
+// routes.post('/upload', auth.passport.authenticate('jwt', { session: false }), upload.single('file'), isAdmin, function (req, res, next) {
+routes.post('/upload', auth.passport.authenticate('jwt', { session: false }), isAdmin, upload.single('file'), function (req, res) {
   var stream = fs.createReadStream(req.file.path);
   var csvStream = csv({
     delimiter: ',',
@@ -161,7 +162,8 @@ routes.post('/upload', auth.passport.authenticate('jwt', { session: false }), up
  * @method
  * @param {uuid} questionid - Question ID.
  */
-routes.post('/upload/image', auth.passport.authenticate('jwt', { session: false }), upload_images.single('file'), isAdmin, function (req, res, next) {
+// routes.post('/upload/image', auth.passport.authenticate('jwt', { session: false }), upload_images.single('file'), isAdmin, function (req, res, next) {
+routes.post('/upload/image', auth.passport.authenticate('jwt', { session: false }), upload_images.single('file'), isAdmin, function (req, res) {
   if (!fs.existsSync(path.resolve(__dirname, '../../..', 'uploads', 'images', req.body.questionid))) {
     // change 'has_image' field in db
     if (typeof (req.body.questionid) == 'undefined') {
