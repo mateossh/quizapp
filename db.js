@@ -1,9 +1,11 @@
 'use strict';
 
 const Sequelize = require('sequelize');
-const sequelize = new Sequelize('quizapp', 'quizapp', 'zaq1@WSX', {
-  host: '139.59.166.253',
-  dialect: 'mysql',
+const config = require('./config.json');
+
+const sequelize = new Sequelize(config.db.database, config.db.user, config.db.password, {
+  host: config.db.host,
+  dialect: config.db.engine,
   define: {
     charset: 'utf8',
     collate: 'utf8_polish_ci',

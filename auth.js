@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const db = require('./db');
+const config = require('./config.json');
 
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
@@ -10,7 +11,7 @@ const auth = {};
 
 var jwtOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: '8MrmQxycj5fq6qKu',
+  secretOrKey: config.jwtSecret,
 }
 
 auth.passport = passport;

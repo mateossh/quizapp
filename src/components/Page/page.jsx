@@ -31,7 +31,7 @@ export default function page(WrappedComponent) {
       // this.logoutUser = this.logoutUser.bind(this);
     }
 
-    async redirectIfUserIsNotLogged(history) {
+    async redirectIfUserIsNotLogged(history) { // eslint-disable-line
       if (localStorage.getItem('token') === null || typeof localStorage.getItem('token') === 'undefined') {
         history.push('/login');
       }

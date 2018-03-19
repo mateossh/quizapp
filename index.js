@@ -5,6 +5,11 @@ const jwt = require('jsonwebtoken');
 const session = require('express-session'); // ????????????
 const bCrypt = require('bcrypt-nodejs');
 const path = require('path');
+const fs = require('fs');
+const process = require('process');
+const pathExists = require('path-exists');
+const config = require('./config.json');
+
 const auth = require('./auth');
 const db = require('./db');
 
@@ -62,6 +67,6 @@ db.sequelize.sync().then(function() {
   console.log('Database is synced');
 });
 
-app.listen(3000, function () {
-  console.log('Quiz app API is listening on port 3000!');
+app.listen(config.port, function () {
+  console.log('Quiz app API is listening on port ' + config.port);
 });
