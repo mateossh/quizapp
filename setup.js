@@ -5,6 +5,7 @@ const chalk = require('chalk');
 const cliSpinners = require('cli-spinners');
 const ora = require('ora');
 const inquirer = require('inquirer');
+const helpers = require('./helpers');
 
 const questions = [
   {
@@ -63,27 +64,68 @@ const questions = [
       return value != '' ? true : 'This value can\'t be null. Enter value';
     },
   },
+  {
+    type: 'input',
+    name: 'user.username',
+    message: 'Enter admin username',
+    default: null,
+    validate: function(value) {
+      return value != '' ? true : 'This value can\'t be null  . Enter value';
+    },
+  },
+  {
+    type: 'input',
+    name: 'user.password',
+    message: 'Enter admin password',
+    mask: '*',
+    default: null,
+    validate: function(value) {
+      return value != '' ? true : 'This value can\'t be null. Enter value';
+    },
+  },
 ];
-
-
 console.log(chalk.bold('Hi, this is Quiz App installer\n'));
 
 inquirer.prompt(questions).then(function(answers) {
+  const user = {
+    username: answers.user.username,
+    password: answers.user.password,
+  };
+  delete(answers.user);
   const data = JSON.stringify(answers, null, 2);
 
   fs.writeFile('config.json', data, function(err) {
     if (err) throw err;
     console.log(chalk.green('\nConfig file has been saved successfully'));
 
-    const spinner = ora('Webpack is preparing the files...').start();
+    const db = require('./db');
+    const passwordHash = helpers.generateHash(user.password);
+    const dataUser = {
+      username: user.username,
+      password: passwordHash,
+      division: '---',
+      role: 'admin',
+    };
 
+    db.users.create(dataUser).then(function (newUser, created) {
+      if (!newUser) {
+        console.log(chalk.red('\nAn error occurred while creating admin account'));
+      } else if (newUser) {
+        console.log(chalk.green('\nAdmin account created successfully'));
+      }
+    }).catch(function(error) {
+      console.log(chalk.red('\nAn error occurred while creating admin account'));
+    });
+
+    const spinner = ora('Webpack is preparing the files...').start();
     execa.shell('./node_modules/webpack/bin/webpack.js' +
       ' --config '+
       ' webpack.prod.js '+
       ' --env.prod '
     ).then(function(res) {
       spinner.stop();
-      console.log(chalk.green.bold('\nServe dist folder using webserver of your choice and you can start application ;]'));
     });
+
+    console.log(chalk.green.bold('\nServe dist folder using webserver of your choice and you can start application ;]'));
   });
 });

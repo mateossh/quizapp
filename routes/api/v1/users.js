@@ -1,13 +1,8 @@
 const routes = require('express').Router();
-const bCrypt = require('bcrypt-nodejs');
 const auth = require('../../../auth');
 const db = require('../../../db');
 const isAdmin = require('../../../middleware');
-
-
-var generateHash = function (password) {
-  return bCrypt.hashSync(password, bCrypt.genSaltSync(8), null);
-};
+const helpers = require('../../../helpers');
 
 /**
  * Return all divisions.
@@ -484,40 +479,24 @@ routes.delete('/', auth.passport.authenticate('jwt', { session: false }), isAdmi
  */
 
 routes.post('/register', auth.passport.authenticate('jwt', { session: false }), isAdmin, function (req, res) {
-  if (typeof (req.body.username) == 'undefined' ||
-    typeof (req.body.password) == 'undefined' ||
-    typeof (req.body.division) == 'undefined' ||
-    typeof (req.body.role) == 'undefined') {
-    res.status(400).json({ error: 'Missing parameters!' });
-  } else {
-    db.users.findOne({
-      where: {
-        username: req.body.username
-      }
-    }).then(function (user) {
-      if (user) {
-        res.status(400).json({ message: 'User exists' });
-      } else {
-        var userPassword = generateHash(req.body.password);
-        var data = {
-          username: req.body.username,
-          password: userPassword,
-          division: req.body.division,
-          role: req.body.role,
-        };
+  // TODO: TO JEST COPYPASTA Z ROUTA REJESTRACJI. TODO FIXTHIS
+  var userPassword = helpers.generateHash(req.body.password);
+  var data = {
+    username: req.body.username,
+    password: userPassword,
+    division: req.body.division,
+    role: req.body.role,
+  };
 
-        db.users.create(data).then(function (newUser, created) {
-          if (!newUser) {
-            res.status(400).json({ messsage: 'Unexpected error' });
-          }
-
-          if (newUser) {
-            res.status(201).json({ messsage: 'User created' });
-          }
-        });
-      }
-    });
-  }
+  db.users.create(data).then(function (newUser, created) {
+    if (!newUser) {
+      res.status(400).json({ messsage: 'Unexpected error' });
+    } else if (newUser) {
+      res.status(201).json({ messsage: 'User created' });
+    }
+  }).catch(function(error) {
+    res.status(400).json({ messsage: 'Error 400', error: error });
+  });
 });
 
 /**
@@ -537,7 +516,7 @@ routes.post('/password/change', auth.passport.authenticate('jwt', { session: fal
       },
     }).then(function (record) {
       record.update({
-        password: generateHash(req.body.password),
+        password: helpers.generateHash(req.body.password),
       },
       {
         fields: ['password'],
