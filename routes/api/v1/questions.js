@@ -28,20 +28,6 @@ routes.get('/', function (req, res) {
   });
 });
 
-/**
- * Return newest question info.
- * @method
- */
-routes.get('/newest', function (req, res) {
-  db.questions.findAll({
-    limit: 1,
-    order: [['created_at', 'DESC']],
-  }).then(function (result) {
-    res.status(200).json(result[0]);
-  }).catch(function (error) {
-    res.status(400).json({ messsage: 'Error 400', error: error });
-  });
-});
 
 /**
  * Return one question.
@@ -61,6 +47,35 @@ routes.get('/:question', function (req, res) {
 });
 
 /**
+ * Return all questions from given categories
+ * @method
+ * @param {uuid} category - Category ID.
+ */
+routes.get('/category/:id', function(req, res) {
+  db.questions.findAll({
+    where: {
+      category_id: req.params.id,
+    },
+    attributes: [
+      'content',
+      'created_at',
+      'updated_at',
+      'id',
+      'has_image',
+      'category_id',
+      ['correct_answer', 'answer0'],
+      ['wrong_answer1', 'answer1'],
+      ['wrong_answer2', 'answer2'],
+      ['wrong_answer3', 'answer3'],
+    ],
+  }).then(function(result) {
+    res.status(200).json(result);
+  }).catch(function (error) {
+    res.status(400).json({ messsage: 'Error 400', error: error });
+  });
+});
+
+/**
  * Add new question.
  * @method
  * @param {string} content - Question content.
@@ -68,32 +83,21 @@ routes.get('/:question', function (req, res) {
  * @param {string} wrong_answer1 - Wrong answer content.
  * @param {string} wrong_answer2 - Wrong answer content.
  * @param {string} wrong_answer3 - Wrong answer content.
- * @param {uuid} quiz_id - Quiz ID.
+ * @param {uuid} category_id - Category ID.
  */
 routes.post('/', auth.passport.authenticate('jwt', { session: false }), isAdmin, function (req, res) {
-  if (typeof(req.body.content) == 'undefined' ||
-      typeof(req.body.correct_answer) == 'undefined' ||
-      typeof(req.body.wrong_answer1) == 'undefined' ||
-      typeof(req.body.wrong_answer2) == 'undefined' ||
-      typeof(req.body.wrong_answer3) == 'undefined' ||
-      typeof(req.body.quiz_id) == 'undefined') {
-        res.status(400).json({ error: 'Missing parameters!' });
-  } else {
-    db.sequelize.sync().then(function() {
-      db.questions.create({
-        content: req.body.content,
-        correct_answer: req.body.correct_answer,
-        wrong_answer1: req.body.wrong_answer1,
-        wrong_answer2: req.body.wrong_answer2,
-        wrong_answer3: req.body.wrong_answer3,
-        quiz_id: req.body.quiz_id,
-      });
-    }).then(function() {
-      res.status(201).json({ message: 'Question added successfully' });
-    }).catch(function (error) {
-      res.status(400).json({ messsage: 'Error 400', error: error });
-    });
-  }
+  db.questions.create({
+    content: req.body.content,
+    correct_answer: req.body.correct_answer,
+    wrong_answer1: req.body.wrong_answer1,
+    wrong_answer2: req.body.wrong_answer2,
+    wrong_answer3: req.body.wrong_answer3,
+    category_id: req.body.category_id,
+  }).then(function(result) {
+    res.status(201).json({ message: 'Question added successfully', question: result });
+  }).catch(function(error) {
+    res.status(400).json({ messsage: 'Error 400', error: error });
+  });
 });
 
 /**
@@ -131,10 +135,10 @@ routes.delete('/', auth.passport.authenticate('jwt', { session: false }), isAdmi
 /**
  * It handles uploading file with questions.
  * @method
- * @param {uuid} id - Question ID.
+ * @param {uuid} categoryid - Category ID.
  */
 // routes.post('/upload', auth.passport.authenticate('jwt', { session: false }), upload.single('file'), isAdmin, function (req, res, next) {
-routes.post('/upload', auth.passport.authenticate('jwt', { session: false }), isAdmin, upload.single('file'), function (req, res) {
+routes.post('/upload', upload.single('file'), function (req, res) {
   var stream = fs.createReadStream(req.file.path);
   var csvStream = csv({
     delimiter: ',',
@@ -147,7 +151,7 @@ routes.post('/upload', auth.passport.authenticate('jwt', { session: false }), is
         wrong_answer1: data[2],
         wrong_answer2: data[3],
         wrong_answer3: data[4],
-        quiz_id: req.body.quizid,
+        category_id: req.body.category_id,
       });
     })
     .on('end', function () {
@@ -163,7 +167,7 @@ routes.post('/upload', auth.passport.authenticate('jwt', { session: false }), is
  * @param {uuid} questionid - Question ID.
  */
 // routes.post('/upload/image', auth.passport.authenticate('jwt', { session: false }), upload_images.single('file'), isAdmin, function (req, res, next) {
-routes.post('/upload/image', auth.passport.authenticate('jwt', { session: false }), upload_images.single('file'), isAdmin, function (req, res) {
+routes.post('/upload/image', upload_images.single('file'), function (req, res) {
   if (!fs.existsSync(path.resolve(__dirname, '../../..', 'uploads', 'images', req.body.questionid))) {
     // change 'has_image' field in db
     if (typeof (req.body.questionid) == 'undefined') {

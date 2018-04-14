@@ -17,6 +17,23 @@ function adminPage(WrappedComponent) {
 
       this.menuItems = [
         {
+          label: 'Kategorie',
+          submenu: [
+            {
+              label: 'Wszystkie kategorie',
+              action: () => { this.props.history.push('/admin/category/list'); },
+            },
+            {
+              label: 'Dodaj kategorię',
+              action: () => { this.props.history.push('/admin/category/add'); },
+            },
+            {
+              label: 'Dodaj pytanie do kategorii',
+              action: () => { this.props.history.push('/admin/category/question/add'); },
+            },
+          ],
+        },
+        {
           label: 'Testy',
           submenu: [
             {
@@ -26,10 +43,6 @@ function adminPage(WrappedComponent) {
             {
               label: 'Dodaj test',
               action: () => { this.props.history.push('/admin/quiz/add'); },
-            },
-            {
-              label: 'Dodaj pytanie do testu',
-              action: () => { this.props.history.push('/admin/quiz/question/add'); },
             },
           ],
         },

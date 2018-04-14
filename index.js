@@ -16,6 +16,7 @@ const db = require('./db');
 const users = require('./routes/api/v1/users');
 const quizzes = require('./routes/api/v1/quizzes');
 const questions = require('./routes/api/v1/questions');
+const categories = require('./routes/api/v1/categories');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use(bodyParser.json()); // no idea niby czemu tak ma być, ale no ok
 app.use('/api/v1/user', users);
 app.use('/api/v1/quiz', quizzes);
 app.use('/api/v1/question', questions);
+app.use('/api/v1/category', categories);
 
 app.use('/images', express.static(path.join(__dirname, 'uploads', 'images')));
 

@@ -92,21 +92,28 @@ routes.get('/:id/admin', function (req, res) {
  */
 routes.get('/:user/quiz/:quiz/answers', function (req, res) {
   db.users_answers.findAll({
-    include: [{
-      model: db.quizzes,
-      attributes: [],
-      include: [{
-        model: db.questions,
-        attributes: [],
-        where: {
-          quiz_id: req.params.quiz,
-        }
-      }],
-    }],
-    where: {
-        user_id: req.params.user,
-        quiz_id: req.params.quiz,
-    },
+    // include: [{
+    //   model: db.quizzes,
+    //   attributes: [],
+    // }],
+    // where: {
+    //   question_id:
+    // }
+    // include: [{
+    //   model: db.quizzes,
+    //   attributes: [],
+    //   include: [{
+    //     model: db.questions,
+    //     attributes: [],
+    //     where: {
+    //       quiz_id: req.params.quiz,
+    //     }
+    //   }],
+    // }],
+    // where: {
+    //     user_id: req.params.user,
+    //     quiz_id: req.params.quiz,
+    // },
   }).then(function (result) {
     res.status(200).json(result);
   }).catch(function (error) {

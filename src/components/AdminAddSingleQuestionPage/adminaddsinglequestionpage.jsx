@@ -18,8 +18,8 @@ class AdminAddSingleQuestionPage extends Component {
       wrongAnswer1: '',
       wrongAnswer2: '',
       wrongAnswer3: '',
-      quizzes: [],
-      selectedQuiz: '',
+      categories: [],
+      selectedCategory: '',
       file: new FormData(),
     };
 
@@ -36,15 +36,15 @@ class AdminAddSingleQuestionPage extends Component {
     this.handleWrongAnswer2 = this.handleWrongAnswer2.bind(this);
     this.handleWrongAnswer3 = this.handleWrongAnswer3.bind(this);
     this.handleQuestionFile = this.handleQuestionFile.bind(this);
-    this.handleQuizSelect = this.handleQuizSelect.bind(this);
+    this.handleCategorySelect = this.handleCategorySelect.bind(this);
     this.addQuestion = this.addQuestion.bind(this);
   }
 
   async callAPIEndpoints() {
-    const quizzes = await axios.get('http://localhost:3000/api/v1/quiz');
+    const categories = await axios.get('http://localhost:3000/api/v1/category');
 
     this.setState({
-      quizzes: quizzes.data,
+      categories: categories.data,
     });
   }
 
@@ -83,9 +83,9 @@ class AdminAddSingleQuestionPage extends Component {
     this.state.file.append('file', files[0]);
   }
 
-  handleQuizSelect(selectedQuiz) {
+  handleCategorySelect(selectedCategory) {
     this.setState({
-      selectedQuiz: selectedQuiz.value,
+      selectedCategory: selectedCategory.value,
     });
   }
 
@@ -97,26 +97,25 @@ class AdminAddSingleQuestionPage extends Component {
         this.state.wrongAnswer1 === '' ||
         this.state.wrongAnswer2 === '' ||
         this.state.wrongAnswer3 === '' ||
-        this.state.selectedQuiz === '') {
+        this.state.selectedCategory === '') {
       toast('Uzupełnij wszystkie pola!', {
         type: 'error',
       });
     } else {
       try {
-        await axios.post('/question', {
+        const result = await axios.post('/question', {
           content: this.state.content,
           correct_answer: this.state.correctAnswer,
           wrong_answer1: this.state.wrongAnswer1,
           wrong_answer2: this.state.wrongAnswer2,
           wrong_answer3: this.state.wrongAnswer3,
-          quiz_id: this.state.selectedQuiz,
+          category_id: this.state.selectedCategory,
         }, this.axiosConfig);
 
         if (this.state.file.has('file')) {
-          const latest = await axios.get('http://localhost:3000/api/v1/question/newest');
-          this.state.file.append('questionid', latest.data.id);
+          this.state.file.append('questionid', result.data.question.id);
 
-          axios.post('http://localhost:3000/api/v1/question/upload', this.state.file);
+          axios.post('http://localhost:3000/api/v1/question/upload/image', this.state.file);
         }
       } catch (error) {
         console.error(error); // eslint-disable-line no-console
@@ -124,7 +123,7 @@ class AdminAddSingleQuestionPage extends Component {
           type: 'error',
         });
       } finally {
-        this.props.history.push(`/admin/quiz/single/${this.state.selectedQuiz}`);
+        this.props.history.push(`/admin/category/single/${this.state.selectedCategory}`);
 
         toast('Test został dodany!', {
           type: 'success',
@@ -138,10 +137,10 @@ class AdminAddSingleQuestionPage extends Component {
   }
 
   render() {
-    let quizzes = null;
+    let categories = null;
 
-    if (this.state.quizzes.length > 0) {
-      quizzes = this.state.quizzes.map((q) => { // eslint-disable-line
+    if (this.state.categories.length > 0) {
+      categories = this.state.categories.map((q) => { // eslint-disable-line
         return {
           value: q.id,
           label: q.name,
@@ -149,7 +148,7 @@ class AdminAddSingleQuestionPage extends Component {
       });
     }
 
-    const value = this.state.selectedQuiz;
+    const value = this.state.selectedCategory;
 
     return (
       <div>
@@ -172,8 +171,8 @@ class AdminAddSingleQuestionPage extends Component {
             name="xd"
             placeholder="Test do którego ma zostać dodane pytanie"
             value={value}
-            onChange={this.handleQuizSelect}
-            options={quizzes}
+            onChange={this.handleCategorySelect}
+            options={categories}
           />
           <Button text="Dodaj pytanie" action={this.addQuestion} center="true" />
         </form>

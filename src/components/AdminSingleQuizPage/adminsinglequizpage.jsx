@@ -164,6 +164,7 @@ class AdminSingleQuizPage extends Component {
 
     if (this.state.questions.length > 0) {
       questionsListItems = this.state.questions.map((item, key) => {
+        console.log(item);
         const image = item.has_image === true
           ? <div className={styles.questionImage}><img style={{ maxWidth: '100%', display: 'none' }} src={`http://localhost:3000/images/${item.id}`} alt="img" /></div>
           : null;
@@ -249,6 +250,7 @@ class AdminSingleQuizPage extends Component {
             <li className={styles.answer}>{item.answer1}</li>
             <li className={styles.answer}>{item.answer2}</li>
             <li className={styles.answer}>{item.answer3}</li>
+
           </ul>
           {image}
           <div className={styles.buttonsContainer}>

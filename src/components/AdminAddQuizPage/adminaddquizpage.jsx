@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import Dropzone from 'react-dropzone';
+import Select from 'react-select';
 import adminPage from '../AdminPage/adminpage.jsx';
 import Input from '../Input/input.jsx';
 import Button from '../Button/button.jsx';
@@ -15,7 +15,8 @@ class AdminAddQuizPage extends Component {
     this.state = {
       name: '',
       size: null,
-      file: new FormData(),
+      categories: [],
+      selectedCategory: '',
     };
 
     this.axiosConfig = {
@@ -27,7 +28,7 @@ class AdminAddQuizPage extends Component {
 
     this.handleName = this.handleName.bind(this);
     this.handleSize = this.handleSize.bind(this);
-    this.handleQuestionFile = this.handleQuestionFile.bind(this);
+    this.handleCategory = this.handleCategory.bind(this);
     this.addQuiz = this.addQuiz.bind(this);
   }
 
@@ -39,58 +40,76 @@ class AdminAddQuizPage extends Component {
     this.setState({ size: e.target.value });
   }
 
-  handleQuestionFile(files) {
-    this.state.file.delete('file');
-    this.state.file.append('file', files[0]);
+  handleCategory(selectedCategory) {
+    this.setState({ selectedCategory: selectedCategory.value });
   }
 
   async addQuiz(e) {
     e.preventDefault();
 
-    if (this.state.name === '' || this.state.size === null || !this.state.file.has('file')) {
+    if (this.state.name === '' || this.state.size === null || this.state.category === null) {
       toast('Uzupełnij wszystkie pola!', {
         type: 'error',
       });
     } else {
       try {
-        await axios.post('/quiz', {
+        const result = await axios.post('/quiz', {
           name: this.state.name,
           size: this.state.size,
+          category_id: this.state.selectedCategory,
         }, this.axiosConfig);
 
-        const latest = await axios.get('/quiz/newest', this.axiosConfig);
-        this.state.file.append('quizid', latest.data.id);
+        if (result.status === 201) {
+          this.props.history.push('/admin/quiz/list');
 
-        axios.post('http://localhost:3000/api/v1/question/upload', this.state.file);
+          toast('Test został dodany!', {
+            type: 'success',
+          });
+        }
       } catch (error) {
         console.error(error); // eslint-disable-line no-console
         toast(`Wystąpił błąd!: ${error}`, {
           type: 'error',
         });
-      } finally {
-        this.props.history.push('/admin/quiz/list');
-
-        toast('Test został dodany!', {
-          type: 'success',
-        });
       }
     }
   }
 
+  async callAPIEndpoints() {
+    const categories = await axios.get('http://localhost:3000/api/v1/category');
+    this.setState({ categories: categories.data });
+  }
+
+  componentWillMount() {
+    this.callAPIEndpoints();
+  }
+
   render() {
+    let categories = null;
+
+    if (this.state.categories.length > 0) {
+      categories = this.state.categories.map((q) => { // eslint-disable-line
+        return {
+          value: q.id,
+          label: q.name,
+        };
+      });
+    }
+
     return (
       <div>
         <h2 className={styles.title}>Dodaj test</h2>
         <form>
           <Input type="text" placeholder="Nazwa" onChange={this.handleName} border="true" />
           <Input type="number" placeholder="Ilość losowanych pytań" onChange={this.handleSize} border="true" min="1" />
-          {/* <Input type="file" id="file" onChange={this.handleQuestionFile} border="true" /> */}
-          <Dropzone
-            className={styles.dropzone}
-            onDrop={this.handleQuestionFile}
-          >
-            Plik *.csv z pytaniami (kliknij, aby wybrać lub przeciągnij plik)
-          </Dropzone>
+          <Select
+            className={styles.select}
+            name="xd"
+            placeholder="Kategoria"
+            value={this.state.selectedCategory}
+            onChange={this.handleCategory}
+            options={categories}
+          />
           <Button text="Dodaj" action={this.addQuiz} center="true" />
         </form>
       </div>

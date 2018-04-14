@@ -17,6 +17,9 @@ import AdminAddQuizPage from '../AdminAddQuizPage/adminaddquizpage.jsx';
 import AdminQuizzesListPage from '../AdminQuizzesListPage/adminquizzeslistpage.jsx';
 import AdminSingleQuizUserResult from '../AdminSingleQuizUserResult/AdminSingleQuizUserResult.jsx';
 import AdminAddSingleQuestionPage from '../AdminAddSingleQuestionPage/adminaddsinglequestionpage.jsx';
+import AdminCategoriesListPage from '../AdminCategoriesListPage/admincategorieslistpage.jsx';
+import AdminAddCategoryPage from '../AdminAddCategoryPage/adminaddcategorypage.jsx';
+import AdminSingleCategoryPage from '../AdminSingleCategoryPage/adminsinglecategorypage.jsx';
 import styles from './style.css';
 
 export default class App extends Component {
@@ -37,7 +40,10 @@ export default class App extends Component {
           <Route exact path="/admin/quiz/add" component={AdminAddQuizPage} history={this.context.history} />
           <Route exact path="/admin/quiz/list" component={AdminQuizzesListPage} history={this.context.history} />
           <Route exact path="/admin/quiz/:quizid/user/:userid" component={AdminSingleQuizUserResult} history={this.context.history} />
-          <Route exact path="/admin/quiz/question/add" component={AdminAddSingleQuestionPage} history={this.context.history} />
+          <Route exact path="/admin/category/single/:id" component={AdminSingleCategoryPage} history={this.context.history} />
+          <Route exact path="/admin/category/list" component={AdminCategoriesListPage} history={this.context.history} />
+          <Route exact path="/admin/category/question/add" component={AdminAddSingleQuestionPage} history={this.context.history} />
+          <Route exact path="/admin/category/add" component={AdminAddCategoryPage} history={this.context.history} />
           <ToastContainer autoClose={3000} />
         </div>
       </Router>

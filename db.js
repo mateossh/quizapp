@@ -25,15 +25,30 @@ db.quizzes = require('./models/quizzes.js')(sequelize, Sequelize);
 db.questions = require('./models/questions.js')(sequelize, Sequelize);
 db.users_answers = require('./models/users_answers.js')(sequelize, Sequelize);
 db.users_quizzes = require('./models/users_quizzes.js')(sequelize, Sequelize);
+db.quizzes_questions = require('./models/quizzes_questions.js')(sequelize, Sequelize);
+db.categories = require('./models/categories.js')(sequelize, Sequelize);
 
 // |-----------|
 // | relations |
 // |-----------|
-db.quizzes.hasMany(db.questions);
-db.questions.belongsTo(db.quizzes);
 
 db.quizzes.hasMany(db.users_answers);
 db.users_answers.belongsTo(db.quizzes);
+
+db.categories.hasMany(db.questions);
+db.questions.belongsTo(db.categories);
+
+db.quizzes.belongsToMany(db.questions, {
+  through: {
+    model: db.quizzes_questions,
+  },
+});
+
+db.questions.belongsToMany(db.quizzes, {
+  through: {
+    model: db.quizzes_questions,
+  },
+});
 
 db.users.belongsToMany(db.quizzes, {
   through: {
@@ -47,13 +62,13 @@ db.quizzes.belongsToMany(db.users, {
   },
 });
 
-db.users.belongsToMany(db.questions, {
+db.users.belongsToMany(db.quizzes_questions, {
   through: {
     model: db.users_answers,
   },
 });
 
-db.questions.belongsToMany(db.users, {
+db.quizzes_questions.belongsToMany(db.users, {
   through: {
     model: db.users_answers,
   },

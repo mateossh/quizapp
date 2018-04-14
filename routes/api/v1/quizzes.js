@@ -20,7 +20,7 @@ routes.get('/', function (req, res) {
     let counter = 0;
     let finalResults = [];
     result.rows.forEach(function(quiz, key) {
-      db.questions.findAndCountAll({
+      db.quizzes_questions.findAndCountAll({
         where: {
           quiz_id: quiz.id,
         },
@@ -50,20 +50,6 @@ routes.get('/', function (req, res) {
   });
 });
 
-/**
- * Return newest quiz info.
- * @method
- */
-routes.get('/newest', function (req, res) {
-  db.quizzes.findAll({
-    limit: 1,
-    order: [['created_at', 'DESC']],
-  }).then(function (result) {
-    res.status(200).json(result[0]);
-  }).catch(function (error) {
-    res.status(400).json({ messsage: 'Error 400', error: error });
-  });
-});
 
 /**
  * Return quiz info.
@@ -89,21 +75,42 @@ routes.get('/:quiz', function (req, res) {
  * @param {int} size - Amount of questions that are randomly chosen for user.
  */
 routes.post('/', auth.passport.authenticate('jwt', { session: false }), isAdmin, function (req, res) {
-  if (typeof(req.body.name) == 'undefined' ||
-      typeof(req.body.size) == 'undefined') {
-        res.status(400).json({ error: 'Missing parameters!' });
-  } else {
-    db.sequelize.sync().then(function() {
-      db.quizzes.create({
-        name: req.body.name,
-        size: req.body.size,
+  db.quizzes.create({
+    name: req.body.name,
+    size: req.body.size,
+  }).then(function(result) {
+    db.questions.findAndCountAll({
+      where: {
+        category_id: req.body.category_id,
+      },
+      order: [
+        db.Sequelize.fn( 'RAND' ),
+      ],
+      attributes: ['id'],
+      limit: parseInt(req.body.size),
+    }).then(function (result2) {
+      let counter = 0;
+      let finalResults = [];
+      result2.rows.forEach(function (item) {
+        db.quizzes_questions.create({
+          question_id: item.id,
+          quiz_id: result.id,
+        }).then(function (result3) {
+          finalResults.push(result3);
+          counter++;
+          if (counter >= result2.count) {
+            res.status(201).json({ messsage: 'Quiz added successfully' });
+          }
+        }).catch(function (error) {
+          res.status(400).json({ messsage: 'Error 400', error: error });
+        });
       });
-    }).then(function() {
-      res.status(201).json({ message: 'Quiz created successfully' });
     }).catch(function (error) {
       res.status(400).json({ messsage: 'Error 400', error: error });
     });
-  }
+  }).catch(function (error) {
+    res.status(400).json({ messsage: 'Error 400', error: error });
+  });
 });
 
 /**
@@ -228,23 +235,25 @@ routes.get('/:quiz/users/division/:divisions', function (req, res) {
 routes.get('/:quiz/questions', function (req, res) {
   db.questions.findAll({
     attributes: [
-      'content',
-      'created_at',
-      'updated_at',
-      'id',
-      'quiz_id',
-      'has_image',
-      ['correct_answer', 'answer0'],
-      ['wrong_answer1', 'answer1'],
-      ['wrong_answer2', 'answer2'],
-      ['wrong_answer3', 'answer3'],
+      // 'content',
+      // 'created_at',
+      // 'updated_at',
+      // 'id',
+      // 'has_image',
+      // ['correct_answer', 'answer0'],
+      // ['wrong_answer1', 'answer1'],
+      // ['wrong_answer2', 'answer2'],
+      // ['wrong_answer3', 'answer3'],
+      db.sequelize.literal('quizzes.quizzes_questions.id'),
     ],
     include: [{
       model: db.quizzes,
+      through: {
+        model: db.quizzes_questions,
+      },
       where: {
         id: req.params.quiz,
       },
-      attributes: [],
     }],
   }).then(function (result) {
     res.status(200).json(result);
@@ -270,7 +279,6 @@ routes.get('/:quiz/questions/limit/:limit', function (req,res) {
       'created_at',
       'updated_at',
       'id',
-      'quiz_id',
       'has_image',
       ['correct_answer', 'answer0'],
       ['wrong_answer1', 'answer1'],
@@ -354,25 +362,15 @@ routes.delete('/unassign', auth.passport.authenticate('jwt', { session: false })
  * @param {uuid} quizid - Quiz ID.
  */
 routes.delete('/', auth.passport.authenticate('jwt', { session: false }), isAdmin, function(req, res) {
-  if (typeof(req.body.quizid) == 'undefined') {
-    res.status(400).json({ error: 'Missing parameters!', error: error });
-  } else {
-    db.quizzes.findOne({
-      where: {
-        id: req.body.quizid
-      }
-    }).then(function(result) {
-      db.quizzes.destroy({
-        where: {
-          id: req.body.quizid,
-        }
-      }).then(function() {
-        res.status(200).json({ message: 'Quiz deleted successfully' });
-      });
-    }).catch(function (error) {
-      res.status(204).json({ messsage: 'Quiz not found', error: error });
-    });
-  }
+  db.quizzes.destroy({
+    where: {
+      id: req.body.quizid
+    }
+  }).then(function(result) {
+    res.status(200).json({ message: 'Quiz deleted successfully' });
+  }).catch(function (error) {
+    res.status(204).json({ messsage: 'Quiz not found', error: error });
+  });
 });
 
 module.exports = routes;
